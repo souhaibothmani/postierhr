@@ -24,11 +24,17 @@
     --dark-color: var(--laposte-gris);
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: #333;
     background-color: var(--laposte-gris-clair);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Navigation */
@@ -173,10 +179,16 @@ body {
     padding: 0.4rem 0.6rem;
 }
 
-/* Footer */
+/* Main content area - grows to fill available space */
+.container {
+    flex: 1;
+}
+
+/* Footer - sticks to bottom */
 footer {
     margin-top: auto;
     border-top: 1px solid #eee;
+    flex-shrink: 0;
 }
 
 /* Responsive adjustments */
