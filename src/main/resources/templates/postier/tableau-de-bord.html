@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}" th:with="titre='Tableau de bord'">
+</head>
+<body>
+    <nav th:replace="fragments/layout :: navbar"></nav>
+
+    <div class="container mt-4">
+        <!-- En-tête de bienvenue -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="bg-primary text-white p-4 rounded">
+                    <h1 class="h3 mb-2">
+                        <i class="bi bi-person-circle"></i> 
+                        Bienvenue, <span th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Nom Utilisateur</span>
+                    </h1>
+                    <p class="mb-0">
+                        <i class="bi bi-card-text"></i> Matricule : <span th:text="${utilisateur.matricule}">MATRICULE</span> |
+                        <i class="bi bi-award"></i> Grade : <span th:text="${utilisateur.grade}">Grade</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raccourcis rapides -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="h4 mb-3">
+                    <i class="bi bi-lightning"></i> Accès rapide
+                </h2>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-lines-fill text-primary fs-1"></i>
+                        <h5 class="card-title mt-3">Mon Profil</h5>
+                        <p class="card-text">Consulter et modifier mes informations personnelles</p>
+                        <a th:href="@{/profil}" class="btn btn-outline-primary">Accéder</a>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-text text-warning fs-1"></i>
+                        <h5 class="card-title mt-3">Mes Demandes</h5>
+                        <p class="card-text">Attestations et congés</p>
+                        <a th:href="@{/demandes}" class="btn btn-outline-warning">Accéder</a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Informations récentes -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Activité récente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Demande d'attestation de travail</h6>
+                                    <p class="mb-1 text-muted">Statut : En attente de validation</p>
+                                    <small class="text-muted">Il y a 2 jours</small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill">En attente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-event"></i> Solde congés 2024
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Congés annuels</span>
+                                <strong class="text-success">15 jours</strong>
+                            </div>
+                            <div class="progress mt-1">
+                                <div class="progress-bar bg-success" style="width: 60%"></div>
+                            </div>
+                            <small class="text-muted">15 jours restants sur 25</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Congés maladie</span>
+                                <strong class="text-primary">28 jours</strong>
+                            </div>
+                            <div class="progress mt-1">
+                                <div class="progress-bar" style="width: 93%"></div>
+                            </div>
+                            <small class="text-muted">28 jours restants sur 30</small>
+                        </div>
+                        
+                        <a th:href="@{/demandes/conge}" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-calendar-plus"></i> Demander un congé
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bell"></i> Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning" role="alert">
+                            <small>
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Pensez à mettre à jour vos données personnelles
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

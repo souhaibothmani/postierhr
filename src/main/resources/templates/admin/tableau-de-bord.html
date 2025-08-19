@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}" th:with="titre='Administration'">
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container mt-4">
+        <!-- En-tête administrateur -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="bg-danger text-white p-4 rounded">
+                    <h1 class="h3 mb-2">
+                        <i class="bi bi-gear"></i> 
+                        Tableau de bord Administrateur
+                    </h1>
+                    <p class="mb-0">
+                        <i class="bi bi-person-badge"></i> 
+                        Connecté en tant que : <span th:text="${utilisateur?.nomComplet ?: 'Administrateur'}">Administrateur</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people text-primary fs-1"></i>
+                        <h5 class="card-title mt-2">Utilisateurs</h5>
+                        <h3 class="text-primary">4</h3>
+                        <small class="text-muted">Total actifs</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">En attente</h5>
+                        <h3 class="text-warning">7</h3>
+                        <small class="text-muted">Demandes à valider</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <h5 class="card-title mt-2">Validées</h5>
+                        <h3 class="text-success">15</h3>
+                        <small class="text-muted">Ce mois</small>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Actions d'administration -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="h4 mb-3">
+                    <i class="bi bi-tools"></i> Actions d'administration
+                </h2>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-plus text-primary fs-1"></i>
+                        <h5 class="card-title mt-3">Utilisateurs</h5>
+                        <p class="card-text">Gérer les comptes utilisateurs et leurs rôles</p>
+                        <a href="#" class="btn btn-outline-primary">Gérer</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-check text-warning fs-1"></i>
+                        <h5 class="card-title mt-3">Validation</h5>
+                        <p class="card-text">Valider ou rejeter les demandes en attente</p>
+                        <a href="#" class="btn btn-outline-warning">Valider</a>
+                    </div>
+                </div>
+            </div>
+            
+            
+        </div>
+
+        <!-- Demandes récentes -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Demandes récentes en attente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Utilisateur</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Jean Martin</td>
+                                        <td><span class="badge bg-primary">Attestation travail</span></td>
+                                        <td>15/08/2024</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success me-1">
+                                                <i class="bi bi-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sophie Bernard</td>
+                                        <td><span class="badge bg-warning">Congé annuel</span></td>
+                                        <td>14/08/2024</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success me-1">
+                                                <i class="bi bi-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bell"></i> Notifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning" role="alert">
+                            <small>
+                                <i class="bi bi-exclamation-triangle"></i>
+                                7 demandes en attente de validation
+                            </small>
+                        </div>
+                        <div class="alert alert-success" role="alert">
+                            <small>
+                                <i class="bi bi-check-circle"></i>
+                                2 nouveaux utilisateurs inscrits cette semaine
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-event"></i> Activité récente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="d-flex mb-2">
+                                <i class="bi bi-clock text-muted me-2"></i>
+                                <small>
+                                    <strong>10:30</strong> - Demande d'attestation validée
+                                </small>
+                            </div>
+                            <div class="d-flex mb-2">
+                                <i class="bi bi-clock text-muted me-2"></i>
+                                <small>
+                                    <strong>09:15</strong> - Nouvel utilisateur inscrit
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

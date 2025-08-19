@@ -1,0 +1,43 @@
+# Docker Compose configuration for PostierHR application
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postierhr-postgres
+    environment:
+      POSTGRES_DB: postierhr
+      POSTGRES_USER: postierhr
+      POSTGRES_PASSWORD: postierhr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postierhr -d postierhr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: postierhr-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@postierhr.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  default:
+    name: postierhr-network

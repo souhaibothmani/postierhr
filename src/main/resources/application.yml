@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: postierhr
+  profiles:
+    active: local
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postierhr
+    username: postierhr
+    password: postierhr
+    driver-class-name: org.postgresql.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    
+  security:
+    remember-me:
+      key: postierhr-remember-me-key
+      
+  thymeleaf:
+    cache: false
+    
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: JSESSIONID
+        http-only: true
+        secure: false
+        
+logging:
+  level:
+    com.example.postierhr: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.authentication: DEBUG
+    org.springframework.security.web.authentication: DEBUG

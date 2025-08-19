@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}" th:with="titre='Administration - Attestations'">
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container-fluid mt-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-1">
+                            <i class="bi bi-file-earmark-check text-primary"></i>
+                            Gestion des Attestations
+                        </h1>
+                        <p class="text-muted mb-0">Administrer les demandes d'attestation et leurs documents</p>
+                    </div>
+                    <a href="/admin/tableau-de-bord" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock text-warning fs-1"></i>
+                        <h5 class="card-title mt-2">En attente</h5>
+                        <h3 class="text-warning" id="pending-count">0</h3>
+                        <small class="text-muted">Demandes à traiter</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="bi bi-files text-info fs-1"></i>
+                        <h5 class="card-title mt-2">Documents</h5>
+                        <h3 class="text-info" id="documents-count">0</h3>
+                        <small class="text-muted">Fichiers uploadés</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle text-success fs-1"></i>
+                        <h5 class="card-title mt-2">Approuvées</h5>
+                        <h3 class="text-success" id="approved-count">0</h3>
+                        <small class="text-muted">Ce mois</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body text-center">
+                        <i class="bi bi-x-circle text-danger fs-1"></i>
+                        <h5 class="card-title mt-2">Rejetées</h5>
+                        <h3 class="text-danger" id="rejected-count">0</h3>
+                        <small class="text-muted">Ce mois</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres et recherche -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="filter-type" class="form-label">Type d'attestation</label>
+                                <select class="form-select" id="filter-type">
+                                    <option value="">Tous les types</option>
+                                    <option value="TRAVAIL">Attestation de travail</option>
+                                    <option value="SALAIRE">Attestation de salaire</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filter-user" class="form-label">Rechercher un utilisateur</label>
+                                <input type="text" class="form-control" id="filter-user" placeholder="Nom, prénom ou matricule">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" class="btn btn-primary me-2" onclick="appliquerFiltres()">
+                                    <i class="bi bi-search"></i> Rechercher
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="reinitialiserFiltres()">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des demandes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul"></i> Demandes d'attestation
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="actualiserListe()">
+                            <i class="bi bi-arrow-clockwise"></i> Actualiser
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Utilisateur</th>
+                                        <th>Type</th>
+                                        <th>Période</th>
+                                        <th>Motif</th>
+                                        <th>Documents</th>
+                                        <th>Date</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attestations-tbody">
+                                    <tr id="loading-row">
+                                        <td colspan="7" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Chargement...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour visualiser un document -->
+    <div class="modal fade" id="documentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark"></i>
+                        <span id="document-title">Document</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="document-info" class="mb-3"></div>
+                    <div id="document-preview" class="text-center"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="approve-btn">
+                        <i class="bi bi-check-circle"></i> Approuver
+                    </button>
+                    <button type="button" class="btn btn-danger" id="reject-btn">
+                        <i class="bi bi-x-circle"></i> Rejeter
+                    </button>
+                    <button type="button" class="btn btn-primary" id="download-btn">
+                        <i class="bi bi-download"></i> Télécharger
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de rejet -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-x-circle text-danger"></i> Rejeter le document
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="reject-reason" class="form-label">Raison du rejet</label>
+                        <textarea class="form-control" id="reject-reason" rows="3" 
+                                  placeholder="Expliquez pourquoi ce document est rejeté..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="confirmerRejet()">
+                        <i class="bi bi-x-circle"></i> Confirmer le rejet
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Scripts pour la gestion admin -->
+    <script>
+        let currentDocumentId = null;
+        let attestationsData = [];
+
+        // Charger les données au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            chargerAttestations();
+        });
+
+        async function chargerAttestations() {
+            try {
+                const response = await fetch('/admin/api/attestations');
+                if (response.ok) {
+                    attestationsData = await response.json();
+                    afficherAttestations(attestationsData);
+                    mettreAJourStatistiques();
+                } else {
+                    afficherErreur('Erreur lors du chargement des attestations');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                afficherErreur('Erreur réseau lors du chargement');
+            }
+        }
+
+        function afficherAttestations(attestations) {
+            const tbody = document.getElementById('attestations-tbody');
+            
+            if (attestations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucune demande d'attestation
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = attestations.map(attestation => `
+                <tr>
+                    <td>
+                        <div>
+                            <strong>${attestation.utilisateurPrenom} ${attestation.utilisateurNom}</strong>
+                            <br><small class="text-muted">${attestation.utilisateurMatricule}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${attestation.type === 'TRAVAIL' ? 'bg-primary' : 'bg-success'}">
+                            ${attestation.type === 'TRAVAIL' ? 'Travail' : 'Salaire'}
+                        </span>
+                    </td>
+                    <td>
+                        ${attestation.dateDebut && attestation.dateFin ? 
+                            `${formatDate(attestation.dateDebut)} - ${formatDate(attestation.dateFin)}` : 
+                            '<span class="text-muted">Non spécifiée</span>'
+                        }
+                    </td>
+                    <td>
+                        ${attestation.motif ? 
+                            `<small>${attestation.motif}</small>` : 
+                            '<span class="text-muted">-</span>'
+                        }
+                    </td>
+                    <td>
+                        ${attestation.documentsExistants && attestation.documentsExistants.length > 0 ?
+                            `<div class="d-flex flex-wrap gap-1">
+                                ${attestation.documentsExistants.map(doc => `
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="voirDocument('${doc.id}', '${doc.nomOriginal}', '${doc.typeMime}', '${doc.tailleFormatee}', '${doc.iconClass}')">
+                                        <i class="${doc.iconClass}"></i>
+                                        <small>${doc.nomOriginal.length > 15 ? doc.nomOriginal.substring(0, 15) + '...' : doc.nomOriginal}</small>
+                                    </button>
+                                `).join('')}
+                            </div>` :
+                            '<span class="text-muted"><i class="bi bi-file-x"></i> Aucun</span>'
+                        }
+                    </td>
+                    <td>
+                        <small>${formatDateTime(attestation.dateCreation)}</small>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                            ${attestation.documentsExistants && attestation.documentsExistants.length > 0 ?
+                                attestation.documentsExistants.map(doc => `
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                                                data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="approuverDocument('${doc.id}')">
+                                                    <i class="bi bi-check-circle text-success"></i> Approuver
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" onclick="rejeterDocument('${doc.id}')">
+                                                    <i class="bi bi-x-circle text-danger"></i> Rejeter
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item" href="/api/documents/${doc.id}/download">
+                                                    <i class="bi bi-download"></i> Télécharger
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                `).join('') :
+                                '<span class="text-muted">-</span>'
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function voirDocument(id, nom, type, taille, iconClass) {
+            currentDocumentId = id;
+            
+            document.getElementById('document-title').textContent = nom;
+            document.getElementById('document-info').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Type:</strong> ${type}<br>
+                        <strong>Taille:</strong> ${taille}
+                    </div>
+                    <div class="col-md-6">
+                        <i class="${iconClass} fs-2"></i>
+                    </div>
+                </div>
+            `;
+            
+            // Configurer les boutons
+            document.getElementById('approve-btn').onclick = () => approuverDocument(id);
+            document.getElementById('reject-btn').onclick = () => rejeterDocument(id);
+            document.getElementById('download-btn').onclick = () => window.open(`/api/documents/${id}/download`);
+            
+            new bootstrap.Modal(document.getElementById('documentModal')).show();
+        }
+
+        async function approuverDocument(id) {
+            try {
+                const response = await fetch(`/admin/api/documents/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    afficherMessage('Document approuvé avec succès', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('documentModal'))?.hide();
+                    chargerAttestations();
+                } else {
+                    afficherMessage('Erreur lors de l\'approbation', 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                afficherMessage('Erreur réseau', 'danger');
+            }
+        }
+
+        function rejeterDocument(id) {
+            currentDocumentId = id;
+            bootstrap.Modal.getInstance(document.getElementById('documentModal'))?.hide();
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+
+        async function confirmerRejet() {
+            const raison = document.getElementById('reject-reason').value.trim();
+            if (!raison) {
+                afficherMessage('Veuillez préciser la raison du rejet', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/documents/${currentDocumentId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `raison=${encodeURIComponent(raison)}`
+                });
+                
+                if (response.ok) {
+                    afficherMessage('Document rejeté', 'info');
+                    bootstrap.Modal.getInstance(document.getElementById('rejectModal'))?.hide();
+                    document.getElementById('reject-reason').value = '';
+                    chargerAttestations();
+                } else {
+                    afficherMessage('Erreur lors du rejet', 'danger');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                afficherMessage('Erreur réseau', 'danger');
+            }
+        }
+
+        function mettreAJourStatistiques() {
+            let totalDocuments = 0;
+            attestationsData.forEach(att => {
+                if (att.documentsExistants) {
+                    totalDocuments += att.documentsExistants.length;
+                }
+            });
+            
+            document.getElementById('pending-count').textContent = attestationsData.length;
+            document.getElementById('documents-count').textContent = totalDocuments;
+            document.getElementById('approved-count').textContent = '0'; // À implémenter
+            document.getElementById('rejected-count').textContent = '0'; // À implémenter
+        }
+
+        function appliquerFiltres() {
+            const typeFilter = document.getElementById('filter-type').value;
+            const userFilter = document.getElementById('filter-user').value.toLowerCase();
+            
+            let filteredData = attestationsData;
+            
+            if (typeFilter) {
+                filteredData = filteredData.filter(att => att.type === typeFilter);
+            }
+            
+            if (userFilter) {
+                filteredData = filteredData.filter(att => 
+                    att.utilisateurNom.toLowerCase().includes(userFilter) ||
+                    att.utilisateurPrenom.toLowerCase().includes(userFilter) ||
+                    att.utilisateurMatricule.toLowerCase().includes(userFilter)
+                );
+            }
+            
+            afficherAttestations(filteredData);
+        }
+
+        function reinitialiserFiltres() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-user').value = '';
+            afficherAttestations(attestationsData);
+        }
+
+        function actualiserListe() {
+            chargerAttestations();
+        }
+
+        // Utilitaires
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('fr-FR');
+        }
+
+        function formatDateTime(dateStr) {
+            return new Date(dateStr).toLocaleDateString('fr-FR') + ' ' + 
+                   new Date(dateStr).toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function afficherMessage(message, type) {
+            // Créer une alerte Bootstrap temporaire
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function afficherErreur(message) {
+            const tbody = document.getElementById('attestations-tbody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+                        ${message}
+                        <br><button class="btn btn-outline-primary btn-sm mt-2" onclick="chargerAttestations()">
+                            <i class="bi bi-arrow-clockwise"></i> Réessayer
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    </script>
+</body>
+</html>

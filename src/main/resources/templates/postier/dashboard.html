@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container mt-4">
+        <!-- En-tête de bienvenue -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h1 class="card-title mb-1">
+                            <i class="bi bi-house-fill me-2"></i>
+                            Bienvenue sur votre espace RH
+                        </h1>
+                        <p class="card-text mb-0" th:if="${utilisateur}">
+                            Bonjour <span th:text="${utilisateur.prenom + ' ' + utilisateur.nom}">Utilisateur</span> 
+                            (<span th:text="${utilisateur.matricule}">Matricule</span>)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="row mt-4">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-file-text-fill text-primary" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Mon CV</h5>
+                        <p class="card-text text-muted">Gérez votre CV professionnel</p>
+                        <a th:href="@{/cv}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>
+                            Consulter
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-calendar-check-fill text-success" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Congés</h5>
+                        <p class="card-text text-muted">Solde et demandes de congés</p>
+                        <a th:href="@{/leave}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Nouvelle demande
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-file-earmark-check-fill text-info" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Attestations</h5>
+                        <p class="card-text text-muted">Demandes d'attestations</p>
+                        <a th:href="@{/attestations}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Nouvelle demande
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="bi bi-trophy-fill text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="card-title mt-2">Concours</h5>
+                        <p class="card-text text-muted">Concours internes disponibles</p>
+                        <a th:href="@{/competitions}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-search me-1"></i>
+                            Parcourir
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-lightning-fill me-2"></i>
+                            Actions rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <a th:href="@{/profile}" class="btn btn-outline-primary w-100 text-start">
+                                    <i class="bi bi-person-fill me-2"></i>
+                                    Modifier mon profil
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a th:href="@{/cv}" class="btn btn-outline-primary w-100 text-start">
+                                    <i class="bi bi-file-text-fill me-2"></i>
+                                    Mettre à jour mon CV
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a th:href="@{/leave}" class="btn btn-outline-success w-100 text-start">
+                                    <i class="bi bi-calendar-plus me-2"></i>
+                                    Demander un congé
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <a th:href="@{/competitions}" class="btn btn-outline-warning w-100 text-start">
+                                    <i class="bi bi-trophy-fill me-2"></i>
+                                    Consulter les concours
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Informations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" role="alert">
+                            <small>
+                                <i class="bi bi-clock me-1"></i>
+                                <strong>Période de refroidissement :</strong> Vous devez attendre 7 jours entre chaque demande du même type.
+                            </small>
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            <small>
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <strong>CV requis :</strong> Un CV est nécessaire pour postuler aux concours internes.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

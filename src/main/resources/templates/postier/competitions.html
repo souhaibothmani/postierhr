@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+    <div class="container mt-4">
+        <!-- En-tête -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h1 class="card-title mb-1">
+                            <i class="bi bi-trophy-fill me-2"></i>
+                            Concours internes
+                        </h1>
+                        <p class="card-text mb-0">
+                            Consultez et candidatez aux concours internes de La Poste
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages de succès/erreur -->
+        <div th:if="${successMessage}" class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${errorMessage}" class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <form method="get" action="/competitions">
+                    <div class="input-group">
+                        <select class="form-select" name="grade">
+                            <option value="">Tous les grades</option>
+                            <option value="FACTEUR" th:selected="${gradeFiltre == 'FACTEUR'}">Facteur</option>
+                            <option value="DISTRIBUTEUR" th:selected="${gradeFiltre == 'DISTRIBUTEUR'}">Distributeur</option>
+                            <option value="POSTIER" th:selected="${gradeFiltre == 'POSTIER'}">Postier</option>
+                            <option value="CHEF_EQUIPE" th:selected="${gradeFiltre == 'CHEF_EQUIPE'}">Chef d'équipe</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-filter"></i> Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <span th:text="${concours.size()}">0</span> concours disponible(s)
+                </span>
+            </div>
+        </div>
+
+        <!-- Liste des concours -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div th:if="${concours.empty}" class="text-center py-5">
+                    <i class="bi bi-trophy display-4 text-muted"></i>
+                    <p class="text-muted mt-3">Aucun concours disponible pour le moment.</p>
+                </div>
+                
+                <div th:unless="${concours.empty}" class="row">
+                    <div class="col-md-6 col-lg-4 mb-4" th:each="concour : ${concours}">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1" th:text="${concour.titre}">Titre du concours</h5>
+                                    <div th:if="${concour.gradeRequis}">
+                                        <span class="badge bg-secondary" th:text="${concour.gradeRequis}">Grade</span>
+                                    </div>
+                                </div>
+                                <div th:if="${concour.ouvertAuxCandidatures}" class="badge bg-success">
+                                    <i class="bi bi-circle-fill me-1"></i>Ouvert
+                                </div>
+                                <div th:unless="${concour.ouvertAuxCandidatures}" class="badge bg-secondary">
+                                    <i class="bi bi-circle-fill me-1"></i>Fermé
+                                </div>
+                            </div>
+                            
+                            <div class="card-body">
+                                <p class="card-text" th:text="${concour.description != null ? (concour.description.length() > 150 ? concour.description.substring(0, 150) + '...' : concour.description) : 'Aucune description disponible'}">
+                                    Description du concours...
+                                </p>
+                                
+                                <div class="row text-muted small mb-3">
+                                    <div class="col-6" th:if="${concour.dateDebutCandidature}">
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        <strong>Début :</strong><br>
+                                        <span th:text="${#temporals.format(concour.dateDebutCandidature, 'dd/MM/yyyy')}">01/01/2024</span>
+                                    </div>
+                                    <div class="col-6" th:if="${concour.dateFinCandidature}">
+                                        <i class="bi bi-calendar-x me-1"></i>
+                                        <strong>Fin :</strong><br>
+                                        <span th:text="${#temporals.format(concour.dateFinCandidature, 'dd/MM/yyyy')}">31/12/2024</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-block">
+                                    <button type="button" class="btn btn-outline-primary btn-sm view-details-btn" 
+                                            th:attr="data-concours-id=${concour.id}"
+                                            data-bs-toggle="modal" data-bs-target="#concoursModal">
+                                        <i class="bi bi-eye me-1"></i>Voir détails
+                                    </button>
+                                    
+                                    <div th:id="'action-buttons-' + ${concour.id}">
+                                        <!-- Check if user has already applied to this competition -->
+                                        <div th:if="${candidatures != null and !candidatures.empty}" 
+                                             th:with="userApplied=${#lists.contains(candidatures.![concours.id], concour.id)}">
+                                             
+                                            <!-- User has already applied -->
+                                            <div th:if="${userApplied}" class="text-success">
+                                                <button type="button" class="btn btn-success btn-sm" disabled>
+                                                    <i class="bi bi-check-circle me-1"></i>Candidature soumise
+                                                </button>
+                                                <small class="d-block mt-1 text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Vous avez déjà postulé à ce concours
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- User hasn't applied and competition is open -->
+                                            <div th:if="${!userApplied and concour.ouvertAuxCandidatures}">
+                                                <form th:action="@{/api/competitions/{id}/apply(id=${concour.id})}" method="post" class="d-inline apply-form"
+                                                      th:attr="data-concours-id=${concour.id}">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                    <button type="submit" class="btn btn-success btn-sm" 
+                                                            onclick="return confirm('Êtes-vous sûr de vouloir candidater à ce concours ?')">
+                                                        <i class="bi bi-send me-1"></i>Candidater
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            
+                                            <!-- Competition is closed -->
+                                            <div th:if="${!userApplied and !concour.ouvertAuxCandidatures}" class="text-muted">
+                                                <small>
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Candidatures fermées
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Fallback when no candidatures data or empty -->
+                                        <div th:if="${candidatures == null or candidatures.empty}">
+                                            <div th:if="${concour.ouvertAuxCandidatures}">
+                                                <form th:action="@{/api/competitions/{id}/apply(id=${concour.id})}" method="post" class="d-inline apply-form"
+                                                      th:attr="data-concours-id=${concour.id}">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                                    <button type="submit" class="btn btn-success btn-sm" 
+                                                            onclick="return confirm('Êtes-vous sûr de vouloir candidater à ce concours ?')">
+                                                        <i class="bi bi-send me-1"></i>Candidater
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            
+                                            <div th:unless="${concour.ouvertAuxCandidatures}" class="text-muted">
+                                                <small>
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Candidatures fermées
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer text-muted">
+                                <small>
+                                    <i class="bi bi-clock me-1"></i>
+                                    Publié le <span th:text="${#temporals.format(concour.dateCreation, 'dd/MM/yyyy')}">01/01/2024</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de détails du concours -->
+    <div class="modal fade" id="concoursModal" tabindex="-1" aria-labelledby="concoursModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="concoursModalLabel">
+                        <i class="bi bi-trophy me-2"></i>
+                        Détails du concours
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Contenu du modal chargé dynamiquement -->
+                    <div id="modalContent">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Fermer
+                    </button>
+                    <div id="modalApplyButton">
+                        <!-- Bouton de candidature ajouté dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing event listeners');
+            
+            // Test if Bootstrap is loaded
+            if (typeof bootstrap !== 'undefined') {
+                console.log('Bootstrap is loaded');
+            } else {
+                console.error('Bootstrap is NOT loaded');
+            }
+            
+            // Gestion des boutons "Voir détails" via événement modal Bootstrap
+            const concoursModal = document.getElementById('concoursModal');
+            console.log('Modal element found:', concoursModal);
+            
+            if (concoursModal) {
+                // Test Bootstrap Modal functionality
+                console.log('Adding Bootstrap modal event listeners');
+                
+                concoursModal.addEventListener('show.bs.modal', function (event) {
+                    console.log('Bootstrap modal show.bs.modal event triggered');
+                    const button = event.relatedTarget; // Button that triggered the modal
+                    console.log('Button that triggered modal:', button);
+                    
+                    if (button) {
+                        const concoursId = button.getAttribute('data-concours-id');
+                        console.log('Concours ID from button:', concoursId);
+                        if (concoursId) {
+                            chargerDetailsConcoursModal(concoursId);
+                        } else {
+                            console.error('No concours ID found on button');
+                        }
+                    } else {
+                        console.error('No button found as relatedTarget');
+                    }
+                });
+                
+                concoursModal.addEventListener('shown.bs.modal', function (event) {
+                    console.log('Modal has been shown');
+                });
+                
+            } else {
+                console.error('Modal element #concoursModal not found');
+            }
+            
+            // Alternative: Add click listeners to buttons as backup
+            const viewButtons = document.querySelectorAll('.view-details-btn');
+            console.log('Found view details buttons:', viewButtons.length);
+            
+            viewButtons.forEach(function(button, index) {
+                console.log(`Button ${index}:`, button);
+                console.log(`Button ${index} data-concours-id:`, button.getAttribute('data-concours-id'));
+                
+                button.addEventListener('click', function(event) {
+                    console.log('View details button clicked (backup handler)');
+                    console.log('Click event:', event);
+                });
+            });
+
+            // Gestion des formulaires de candidature
+            document.querySelectorAll('.apply-form').forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    if (!confirm('Êtes-vous sûr de vouloir candidater à ce concours ?')) {
+                        return;
+                    }
+                    
+                    const concoursId = this.getAttribute('data-concours-id');
+                    const formData = new FormData(this);
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    
+                    // Désactiver le bouton pendant la soumission
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="bi bi-hourglass me-1"></i>En cours...';
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Success - update the UI to show applied status
+                            const actionDiv = document.getElementById('action-buttons-' + concoursId);
+                            if (actionDiv) {
+                                actionDiv.innerHTML = `
+                                    <div class="text-success">
+                                        <button type="button" class="btn btn-success btn-sm" disabled>
+                                            <i class="bi bi-check-circle me-1"></i>Candidature soumise
+                                        </button>
+                                        <small class="d-block mt-1 text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Vous avez déjà postulé à ce concours
+                                        </small>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Show success toast
+                            showSuccessMessage('Candidature soumise avec succès');
+                        } else {
+                            throw new Error('Erreur lors de la candidature');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Reset button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="bi bi-send me-1"></i>Candidater';
+                        
+                        showErrorMessage('Erreur lors de la candidature');
+                    });
+                });
+            });
+        });
+
+        function chargerDetailsConcoursModal(concoursId) {
+            console.log('chargerDetailsConcoursModal called with ID:', concoursId);
+            const modalContent = document.getElementById('modalContent');
+            const modalApplyButton = document.getElementById('modalApplyButton');
+            
+            if (!modalContent) {
+                console.error('Modal content element not found');
+                return;
+            }
+            
+            // Réinitialiser le contenu
+            modalContent.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            `;
+            if (modalApplyButton) {
+                modalApplyButton.innerHTML = '';
+            }
+
+            // Charger les détails via AJAX
+            console.log('Fetching from:', `/api/competitions/${concoursId}`);
+            fetch(`/api/competitions/${concoursId}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(concours => {
+                    console.log('Concours data received:', concours);
+                    // Afficher les détails
+                    modalContent.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h4>${concours.titre || 'Titre non disponible'}</h4>
+                                <div class="mb-3">
+                                    ${concours.gradeRequis ? `<span class="badge bg-secondary">${concours.gradeRequis}</span>` : ''}
+                                    <span class="badge ${concours.ouvertAuxCandidatures ? 'bg-success' : 'bg-secondary'} ms-2">
+                                        <i class="bi bi-circle-fill me-1"></i>${concours.ouvertAuxCandidatures ? 'Ouvert' : 'Fermé'}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <h6>Description</h6>
+                                    <p>${concours.description || 'Aucune description disponible'}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Informations</h6>
+                                        ${concours.dateDebutCandidature ? `
+                                            <div class="mb-2">
+                                                <i class="bi bi-calendar-event me-2"></i>
+                                                <strong>Début :</strong><br>
+                                                <small>${formatDate(concours.dateDebutCandidature)}</small>
+                                            </div>
+                                        ` : ''}
+                                        ${concours.dateFinCandidature ? `
+                                            <div class="mb-2">
+                                                <i class="bi bi-calendar-x me-2"></i>
+                                                <strong>Fin :</strong><br>
+                                                <small>${formatDate(concours.dateFinCandidature)}</small>
+                                            </div>
+                                        ` : ''}
+                                        <div class="mb-2">
+                                            <i class="bi bi-clock me-2"></i>
+                                            <strong>Publié :</strong><br>
+                                            <small>${formatDateTime(concours.dateCreation)}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${concours.utilisateurDejaCandidat ? `
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Vous avez déjà candidaté à ce concours
+                            </div>
+                        ` : ''}
+                    `;
+
+                    // Ajouter le bouton de candidature si applicable
+                    if (modalApplyButton) {
+                        if (concours.ouvertAuxCandidatures && !concours.utilisateurDejaCandidat) {
+                            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+                            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+                            modalApplyButton.innerHTML = `
+                                <form action="/api/competitions/${concours.id}/apply" method="post" class="d-inline">
+                                    <input type="hidden" name="_csrf" value="${csrfToken}"/>
+                                    <button type="submit" class="btn btn-success" 
+                                            onclick="return confirm('Êtes-vous sûr de vouloir candidater à ce concours ?')">
+                                        <i class="bi bi-send me-1"></i>Candidater
+                                    </button>
+                                </form>
+                            `;
+                        } else if (concours.utilisateurDejaCandidat) {
+                            modalApplyButton.innerHTML = `
+                                <div class="text-success">
+                                    <button type="button" class="btn btn-success" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Candidature déjà soumise
+                                    </button>
+                                    <small class="d-block mt-1 text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Vous avez déjà postulé à ce concours
+                                    </small>
+                                </div>
+                            `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Erreur lors du chargement des détails du concours: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR');
+        }
+
+        function formatDateTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            return date.toLocaleDateString('fr-FR') + ' à ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function showSuccessMessage(message) {
+            // Create a temporary success alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function showErrorMessage(message) {
+            // Create a temporary error alert
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
